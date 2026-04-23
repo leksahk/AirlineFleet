@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Авіакомпанія Premium | Панель управління</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+        .main-container { max-width: 1200px; margin: 40px auto; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); }
+        .stats-card { transition: transform 0.2s; border-left: 5px solid; }
+        .stats-card:hover { transform: translateY(-5px); }
+        .table-container { background: white; border-radius: 12px; padding: 25px; }
+        .badge-type { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; }
+    </style>
+</head>
+<body>
+
+<div class="container main-container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="text-dark fw-bold"><i class="bi bi-airplane-fill text-primary"></i> Airline Fleet Manager</h1>
+    </div>
+
+    <div class="row mb-4 text-center">
+        <div class="col-md-6">
+            <div class="card stats-card border-primary h-100">
+                <div class="card-body py-4">
+                    <i class="bi bi-people-fill fs-2 text-primary mb-2"></i>
+                    <h6 class="text-muted mb-1">Загальна пасажиромісткість</h6>
+                    <h3 class="mb-0 fw-bold" th:text="${totalPassenger} + ' чол.'">0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card stats-card border-success h-100">
+                <div class="card-body py-4">
+                    <i class="bi bi-box-seam-fill fs-2 text-success mb-2"></i>
+                    <h6 class="text-muted mb-1">Загальна вантажопідйомність</h6>
+                    <h3 class="mb-0 fw-bold" th:text="${totalCargo} + ' тонн'">0</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container card shadow-sm">
+
+        <div class="mb-4">
+            <a href="/add" class="btn btn-success fw-bold shadow-sm w-100 py-2">
+                <i class="bi bi-plus-circle-fill"></i> Додати новий літак
+            </a>
+        </div>
+
+        <div class="row mb-4 align-items-center">
+            <div class="col-lg-8">
+                <div class="d-flex flex-wrap gap-2">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="bi bi-geo-alt"></i> Дальність</button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item" href="/sort?by=range&dir=asc">За зростанням ↑</a></li>
+                            <li><a class="dropdown-item" href="/sort?by=range&dir=desc">За спаданням ↓</a></li>
+                        </ul>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="bi bi-speedometer2"></i> Швидкість</button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item" href="/sort?by=speed&dir=asc">Найповільніші ↑</a></li>
+                            <li><a class="dropdown-item" href="/sort?by=speed&dir=desc">Найшвидші ↓</a></li>
+                        </ul>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-info dropdown-toggle" type="button" data-bs-toggle="dropdown"><i class="bi bi-fuel-pump"></i> Економність</button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item" href="/sort?by=fuel&dir=asc">Найекономніші ↑</a></li>
+                            <li><a class="dropdown-item" href="/sort?by=fuel&dir=desc">Найбільші витрати ↓</a></li>
+                        </ul>
+                    </div>
+                    <a href="/" class="btn btn-light border"><i class="bi bi-arrow-clockwise"></i> Скинути</a>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mt-3 mt-lg-0">
+                <form action="/search" method="get" class="input-group shadow-sm">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="number" step="0.1" name="minFuel" class="form-control" placeholder="Мін. пальне" required>
+                    <input type="number" step="0.1" name="maxFuel" class="form-control" placeholder="Макс. пальне" required>
+                    <button type="submit" class="btn btn-warning fw-bold text-dark">Шукати</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="table-responsive" th:if="${not #lists.isEmpty(fleet)}">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th class="px-4">Модель</th>
+                    <th>Виробник</th>
+                    <th>Швидкість</th>
+                    <th>Дальність</th>
+                    <th>Пальне</th>
+                    <th>Тип / Місткість</th>
+                    <th class="text-end px-4">Дії</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="plane : ${fleet}">
+                    <td class="px-4">
+                        <div class="fw-bold text-dark" th:text="${plane.model}">Модель</div>
+                        <small class="text-muted" th:text="'Рік: ' + ${plane.yearOfManufacture}">Рік</small>
+                    </td>
+                    <td th:text="${plane.manufacturer}">Виробник</td>
+                    <td><span class="badge bg-light text-dark border" th:text="${plane.maxSpeed} + ' км/год'">0</span></td>
+                    <td th:text="${plane.flightRange} + ' км'">0</td>
+                    <td><i class="bi bi-droplet text-info"></i> <span th:text="${plane.fuelConsumption}">0</span></td>
+                    <td>
+                        <span class="badge rounded-pill bg-info-subtle text-info-emphasis border border-info-subtle badge-type mb-1" th:text="${plane.getPlaneType()}">Тип</span>
+                        <div class="small fw-bold" th:text="${plane.calculateCapacity()}">0</div>
+                    </td>
+                    <td class="text-end px-4">
+                        <a th:href="@{/edit(model=${plane.model})}" class="btn btn-sm btn-outline-warning me-1" title="Редагувати"><i class="bi bi-pencil-square"></i></a>
+                        <a th:href="@{/delete(model=${plane.model})}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Точно видалити цей літак?')" title="Видалити"><i class="bi bi-trash"></i></a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${#lists.isEmpty(fleet)}" class="text-center py-5 text-muted">
+            <i class="bi bi-airplane fs-1 d-block mb-2"></i>
+            Флот порожній. Дані беруться з Firebase.
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
