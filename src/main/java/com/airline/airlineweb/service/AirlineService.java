@@ -4,6 +4,9 @@ import com.airline.airlineweb.model.*;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
+import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -12,7 +15,8 @@ import java.util.stream.Collectors;
 @Service
 public class AirlineService {
 
-    private final String COLLECTION_NAME = "airplanes";
+    private static  Logger logger = LoggerFactory.getLogger(AirlineService.class);
+    private  String COLLECTION_NAME = "airplanes";
 
     public List<Airplane> getAllAirplanes() {
         Firestore db = FirestoreClient.getFirestore();
@@ -23,13 +27,15 @@ public class AirlineService {
             for (QueryDocumentSnapshot doc : documents) {
                 fleet.add(mapToAirplane(doc));
             }
+            logger.info("Успішно завантажено {} літаків з бази даних.", fleet.size());
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            //якщо Firebase впаде або ключ неправильний - логер запише це і відправить на пошту
+            logger.error("КРИТИЧНА ПОМИЛКА: Не вдалося завантажити флот з Firebase - {}", e.getMessage(), e);
         }
         return fleet;
     }
 
-    public void addAirplane(Airplane plane) {
+    public void addAirplane(@NonNull Airplane plane) {
         Firestore db = FirestoreClient.getFirestore();
         Map<String, Object> docData = new HashMap<>();
 
@@ -51,8 +57,9 @@ public class AirlineService {
 
         try {
             db.collection(COLLECTION_NAME).document(plane.getModel()).set(docData).get();
+            logger.info("Успішно додано/оновлено літак: {}", plane.getModel());
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            logger.error("КРИТИЧНА ПОМИЛКА: Не вдалося зберегти літак {} - {}", plane.getModel(), e.getMessage(), e);
         }
     }
 
@@ -60,13 +67,15 @@ public class AirlineService {
         Firestore db = FirestoreClient.getFirestore();
         try {
             db.collection(COLLECTION_NAME).document(modelName).delete().get();
+            logger.info("Успішно видалено літак: {}", modelName);
         } catch (Exception e) {
-            System.err.println(e.getMessage());
+            logger.error("КРИТИЧНА ПОМИЛКА: Не вдалося видалити літак {} - {}", modelName, e.getMessage(), e);
         }
     }
 
     public void updateAirplane(String oldModelName, String newModel, String newManufacturer,
                                int newYear, double newSpeed, double newRange, double newFuel) {
+        logger.info("Початок оновлення літака: {} -> {}", oldModelName, newModel);
         Airplane plane = getAirplaneByModel(oldModelName);
         if (plane != null) {
             plane.setModel(newModel);
@@ -76,8 +85,12 @@ public class AirlineService {
             plane.setFlightRange(newRange);
             plane.setFuelConsumption(newFuel);
 
-            deleteAirplane(oldModelName);
+            if (!oldModelName.equals(newModel)) {
+                deleteAirplane(oldModelName);
+            }
             addAirplane(plane);
+        } else {
+            logger.warn("Спроба оновити неіснуючий літак: {}", oldModelName);
         }
     }
 
@@ -90,21 +103,25 @@ public class AirlineService {
 
     private Airplane mapToAirplane(QueryDocumentSnapshot doc) {
         String type = doc.getString("type");
-        String model = doc.getString("model");
+        String model = doc.getString("model") != null ? doc.getString("model") : doc.getId();
         String manufacturer = doc.getString("manufacturer");
-        int year = doc.getLong("yearOfManufacture") != null ? doc.getLong("yearOfManufacture").intValue() : 2024;
-        double speed = doc.getDouble("maxSpeed") != null ? doc.getDouble("maxSpeed") : 0;
-        double range = doc.getDouble("flightRange") != null ? doc.getDouble("flightRange") : 0;
-        double fuel = doc.getDouble("fuelConsumption") != null ? doc.getDouble("fuelConsumption") : 0;
-        double capacity = doc.getDouble("capacity") != null ? doc.getDouble("capacity") : 0;
-        int lux = doc.getLong("luxuryLevel") != null ? doc.getLong("luxuryLevel").intValue() : 5;
+
+        int year = doc.get("yearOfManufacture") != null ? ((Number) doc.get("yearOfManufacture")).intValue() : 2024;
+        double speed = doc.get("maxSpeed") != null ? ((Number) doc.get("maxSpeed")).doubleValue() : 0;
+        double range = doc.get("flightRange") != null ? ((Number) doc.get("flightRange")).doubleValue() : 0;
+        double fuel = doc.get("fuelConsumption") != null ? ((Number) doc.get("fuelConsumption")).doubleValue() : 0;
+        double capacity = doc.get("capacity") != null ? ((Number) doc.get("capacity")).doubleValue() : 0;
+        int lux = doc.get("luxuryLevel") != null ? ((Number) doc.get("luxuryLevel")).intValue() : 5;
 
         return switch (type != null ? type : "") {
             case "PassengerAirplane" -> new PassengerAirplane(model, manufacturer, year, speed, range, fuel, (int) capacity);
             case "CargoAirplane" -> new CargoAirplane(model, manufacturer, year, speed, range, fuel, capacity);
             case "MilitaryAirplane" -> new MilitaryAirplane(model, manufacturer, year, speed, range, fuel, capacity);
             case "PrivateJet" -> new PrivateJet(model, manufacturer, year, speed, range, fuel, (int) capacity, lux);
-            default -> new PassengerAirplane(model, manufacturer, year, speed, range, fuel, (int) capacity);
+            default -> {
+                logger.warn("У базі знайдено літак з невідомим типом: {}. Використано тип за замовчуванням.", type);
+                yield new PassengerAirplane(model, manufacturer, year, speed, range, fuel, (int) capacity);
+            }
         };
     }
 
@@ -123,12 +140,14 @@ public class AirlineService {
     }
 
     public List<Airplane> findAirplanesByFuelRange(double min, double max) {
+        logger.info("Виконано пошук літаків за пальним: від {} до {}", min, max);
         return getAllAirplanes().stream()
                 .filter(p -> p.getFuelConsumption() >= min && p.getFuelConsumption() <= max)
                 .collect(Collectors.toList());
     }
 
     public List<Airplane> getSortedFleet(String sortBy, String direction) {
+        logger.info("Користувач відсортував флот за параметром: {}, напрямок: {}", sortBy, direction);
         Comparator<Airplane> comparator = switch (sortBy) {
             case "speed" -> Comparator.comparingDouble(Airplane::getMaxSpeed);
             case "fuel" -> Comparator.comparingDouble(Airplane::getFuelConsumption);

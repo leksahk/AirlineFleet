@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty scope="context" name="emailUser" source="email.username"/>
+    <springProperty scope="context" name="emailPass" source="email.password"/>
+
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>airline.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="EMAIL" class="ch.qos.logback.classic.net.SMTPAppender">
+        <smtpHost>smtp.gmail.com</smtpHost>
+        <smtpPort>465</smtpPort>
+        <STARTTLS>true</STARTTLS>
+
+        <username>${emailUser}</username>
+        <password>${emailPass}</password>
+
+        <to>${emailUser}</to>
+        <from>${emailUser}</from>
+
+        <subject>CRITICAL ERROR: Airline Fleet Manager</subject>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%date %-5level %logger{35} - %message%n</pattern>
+        </layout>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+        <appender-ref ref="EMAIL" />
+    </root>
+</configuration>

@@ -14,8 +14,8 @@ target/
 .sts4-cache
 
 *.json
-serviceAccountKey.json
-
+firebase-key.json
+application.properties
 ### IntelliJ IDEA ###
 .idea
 *.iws
