@@ -8,7 +8,6 @@ public abstract class Airplane {
     private double flightRange;
     private double fuelConsumption;
 
-    // Обов'язковий порожній конструктор для Firebase
     public Airplane() {}
 
     public Airplane(String model, String manufacturer, int yearOfManufacture,

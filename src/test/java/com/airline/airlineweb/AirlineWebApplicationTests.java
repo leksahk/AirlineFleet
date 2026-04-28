@@ -10,4 +10,9 @@ class AirlineWebApplicationTests {
     void contextLoads() {
     }
 
+    @Test
+    void main() {
+        AirlineWebApplication.main(new String[] {});
+    }
+
 }

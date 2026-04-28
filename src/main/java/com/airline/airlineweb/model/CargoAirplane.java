@@ -3,7 +3,6 @@ package com.airline.airlineweb.model;
 public class CargoAirplane extends Airplane {
     private double payloadCapacity;
 
-    // Обов'язковий порожній конструктор для Firebase
     public CargoAirplane() {}
 
     public CargoAirplane(String model, String manufacturer, int year, double maxSpeed,

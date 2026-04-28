@@ -20,7 +20,6 @@ public class EmailService {
             mailMessage.setFrom("rizze7778@gmail.com");
             mailMessage.setTo("rizze7778@gmail.com");
 
-            // Динамічний заголовок залежно від важливості
             String icon = severity.equalsIgnoreCase("CRITICAL") ? "🚨" : "⚠️";
             mailMessage.setSubject(icon + " " + severity + " ERROR: " + errorType);
 

@@ -4,7 +4,6 @@ import com.airline.airlineweb.model.*;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
-import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -15,8 +14,8 @@ import java.util.stream.Collectors;
 @Service
 public class AirlineService {
 
-    private static  Logger logger = LoggerFactory.getLogger(AirlineService.class);
-    private  String COLLECTION_NAME = "airplanes";
+    private static final Logger logger = LoggerFactory.getLogger(AirlineService.class);
+    private static final String COLLECTION_NAME = "airplanes";
 
     public List<Airplane> getAllAirplanes() {
         Firestore db = FirestoreClient.getFirestore();
@@ -29,13 +28,12 @@ public class AirlineService {
             }
             logger.info("Успішно завантажено {} літаків з бази даних.", fleet.size());
         } catch (Exception e) {
-            //якщо Firebase впаде або ключ неправильний - логер запише це і відправить на пошту
             logger.error("КРИТИЧНА ПОМИЛКА: Не вдалося завантажити флот з Firebase - {}", e.getMessage(), e);
         }
         return fleet;
     }
 
-    public void addAirplane(@NonNull Airplane plane) {
+    public void addAirplane(Airplane plane) {
         Firestore db = FirestoreClient.getFirestore();
         Map<String, Object> docData = new HashMap<>();
 
@@ -73,24 +71,32 @@ public class AirlineService {
         }
     }
 
-    public void updateAirplane(String oldModelName, String newModel, String newManufacturer,
-                               int newYear, double newSpeed, double newRange, double newFuel) {
-        logger.info("Початок оновлення літака: {} -> {}", oldModelName, newModel);
+    public void updateAirplane(String oldModelName, String model, String manufacturer, int year,
+                               double maxSpeed, double flightRange, double fuelConsumption,
+                               double specialValue, int luxuryLevel) {
         Airplane plane = getAirplaneByModel(oldModelName);
         if (plane != null) {
-            plane.setModel(newModel);
-            plane.setManufacturer(newManufacturer);
-            plane.setYearOfManufacture(newYear);
-            plane.setMaxSpeed(newSpeed);
-            plane.setFlightRange(newRange);
-            plane.setFuelConsumption(newFuel);
+            plane.setModel(model);
+            plane.setManufacturer(manufacturer);
+            plane.setYearOfManufacture(year);
+            plane.setMaxSpeed(maxSpeed);
+            plane.setFlightRange(flightRange);
+            plane.setFuelConsumption(fuelConsumption);
 
-            if (!oldModelName.equals(newModel)) {
-                deleteAirplane(oldModelName);
+            if (plane instanceof PassengerAirplane pa) {
+                pa.setPassengerSeats((int) specialValue);
+            } else if (plane instanceof CargoAirplane ca) {
+                ca.setPayloadCapacity(specialValue);
+            } else if (plane instanceof MilitaryAirplane ma) {
+                ma.setWeaponLoad(specialValue);
+            } else if (plane instanceof PrivateJet pj) {
+                pj.setPassengers((int) specialValue);
+                pj.setLuxuryLevel(luxuryLevel);
             }
+
+            deleteAirplane(oldModelName);
             addAirplane(plane);
-        } else {
-            logger.warn("Спроба оновити неіснуючий літак: {}", oldModelName);
+            logger.info("Літак успішно оновлено: {}", model);
         }
     }
 

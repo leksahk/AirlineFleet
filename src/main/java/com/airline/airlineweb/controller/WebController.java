@@ -126,8 +126,23 @@ public class WebController {
                                  @RequestParam int yearOfManufacture,
                                  @RequestParam double maxSpeed,
                                  @RequestParam double flightRange,
-                                 @RequestParam double fuelConsumption) {
-        airlineService.updateAirplane(oldModelName, model, manufacturer, yearOfManufacture, maxSpeed, flightRange, fuelConsumption);
+                                 @RequestParam double fuelConsumption,
+                                 @RequestParam double specialValue,
+                                 @RequestParam(defaultValue = "5") int luxuryLevel,
+                                 RedirectAttributes redirectAttributes) {
+
+        logger.info("Оновлення даних літака: {} -> {}", oldModelName, model);
+
+        try {
+            airlineService.updateAirplane(oldModelName, model, manufacturer, yearOfManufacture,
+                    maxSpeed, flightRange, fuelConsumption,
+                    specialValue, luxuryLevel);
+        } catch (Exception e) {
+            logger.error("Помилка при оновленні літака {}: {}", oldModelName, e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Помилка оновлення: " + e.getMessage());
+            return "redirect:/edit?model=" + oldModelName;
+        }
+
         return "redirect:/";
     }
 }

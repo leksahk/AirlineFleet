@@ -3,7 +3,6 @@ package com.airline.airlineweb.model;
 public class PassengerAirplane extends Airplane {
     private int passengerSeats;
 
-    // Обов'язковий порожній конструктор для Firebase
     public PassengerAirplane() {}
 
     public PassengerAirplane(String model, String manufacturer, int year, double maxSpeed,
@@ -29,6 +28,7 @@ public class PassengerAirplane extends Airplane {
     public String toString() {
         return "Пасажирський: " + super.toString() + " місць";
     }
+
     @Override
     public String getPlaneType() { return "Пасажирський (чол)"; }
 }
