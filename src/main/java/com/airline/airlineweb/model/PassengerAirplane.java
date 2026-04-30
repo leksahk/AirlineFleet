@@ -1,32 +1,32 @@
 package com.airline.airlineweb.model;
 
 public class PassengerAirplane extends Airplane {
-    private int passengerSeats;
+    private int passengers;
 
     public PassengerAirplane() {}
 
     public PassengerAirplane(String model, String manufacturer, int year, double maxSpeed,
-                             double flightRange, double fuelConsumption, int passengerSeats) {
+                             double flightRange, double fuelConsumption, int passengers) {
         super(model, manufacturer, year, maxSpeed, flightRange, fuelConsumption);
-        setPassengerSeats(passengerSeats);
+        setPassengers(passengers);
     }
 
-    public int getPassengerSeats() { return passengerSeats; }
+    public int getPassengers() { return passengers; }
 
-    public void setPassengerSeats(int seats) {
-        if (seats < 1 || seats > 1000)
+    public void setPassengers(int passengers) {
+        if (passengers < 1 || passengers > 1000)
             throw new IllegalArgumentException("Кількість місць має бути від 1 до 1000");
-        this.passengerSeats = seats;
+        this.passengers = passengers;
     }
 
     @Override
     public double calculateCapacity() {
-        return passengerSeats;
+        return passengers;
     }
 
     @Override
     public String toString() {
-        return "Пасажирський: " + super.toString() + " місць";
+        return "Пасажирський: " + super.toString() + " | місць: " + passengers;
     }
 
     @Override

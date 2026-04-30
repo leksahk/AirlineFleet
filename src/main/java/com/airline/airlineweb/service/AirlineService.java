@@ -45,7 +45,7 @@ public class AirlineService {
         docData.put("flightRange", plane.getFlightRange());
         docData.put("fuelConsumption", plane.getFuelConsumption());
 
-        if (plane instanceof PassengerAirplane) docData.put("capacity", ((PassengerAirplane) plane).getPassengerSeats());
+        if (plane instanceof PassengerAirplane) docData.put("capacity", ((PassengerAirplane) plane).getPassengers());
         else if (plane instanceof CargoAirplane) docData.put("capacity", ((CargoAirplane) plane).getPayloadCapacity());
         else if (plane instanceof MilitaryAirplane) docData.put("capacity", ((MilitaryAirplane) plane).getWeaponLoad());
         else if (plane instanceof PrivateJet) {
@@ -84,7 +84,7 @@ public class AirlineService {
             plane.setFuelConsumption(fuelConsumption);
 
             if (plane instanceof PassengerAirplane pa) {
-                pa.setPassengerSeats((int) specialValue);
+                pa.setPassengers((int) specialValue);
             } else if (plane instanceof CargoAirplane ca) {
                 ca.setPayloadCapacity(specialValue);
             } else if (plane instanceof MilitaryAirplane ma) {
@@ -134,7 +134,7 @@ public class AirlineService {
     public int calculateTotalPassengerCapacity(List<Airplane> fleet) {
         return fleet.stream()
                 .filter(p -> p instanceof PassengerAirplane || p instanceof PrivateJet)
-                .mapToInt(p -> p instanceof PassengerAirplane ? ((PassengerAirplane) p).getPassengerSeats() : ((PrivateJet) p).getPassengers())
+                .mapToInt(p -> p instanceof PassengerAirplane ? ((PassengerAirplane) p).getPassengers() : ((PrivateJet) p).getPassengers())
                 .sum();
     }
 
